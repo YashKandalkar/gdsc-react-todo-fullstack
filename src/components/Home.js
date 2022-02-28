@@ -1,46 +1,60 @@
-import React, { useRef, useState } from "react";
-import Navbar from "../components/Navbar";
-import TodoList from "../components/TodoList";
+import React, { useEffect, useRef, useState } from "react";
+import TodoList from "./TodoList";
 
-const todoList = [
-  {
-    id: 1,
-    title: "Complete maths homework.",
-    completed: false,
-  },
-  {
-    id: 2,
-    title: "Complete science homework.",
-    completed: false,
-  },
-  {
-    id: 3,
-    title: "Complete english homework. Complete english homework. Complete ",
-    completed: false,
-  },
-];
-
-const Home = () => {
-  const [todos, setTodos] = useState(todoList);
+const Home = ({ userData }) => {
+  const [todos, setTodos] = useState([]);
   const todoInput = useRef();
 
+  useEffect(() => {
+    fetch("/getNotes", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        userId: userData._id,
+      }),
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data)) {
+          setTodos(data.reverse());
+        }
+      });
+  }, [userData._id]);
+
   const onAddTodo = (title) => {
-    const newTodo = {
-      id: Date.now(),
+    if (title === "") {
+      return alert("Please enter a todo!");
+    }
+    const data = {
+      userId: userData._id,
       title,
       completed: false,
     };
-    setTodos([newTodo, ...todos]);
+
+    fetch("/addNote", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        setTodos([data, ...todos]);
+      });
+
+    // setTodos([data, ...todos]);
     todoInput.current.value = "";
   };
 
   return (
     <div>
-      <Navbar />
       <div className="pb-7" style={{ borderBottom: "1px #ddd solid" }}>
-        <h1 className="text-2xl px-8 pt-6">Welcome, Yash Kandalkar!</h1>
+        <h1 className="text-2xl px-8 pt-6"> Welcome, {userData.name}! </h1>
         <p className="text-base px-8">
-          Use this web app to create your to-do list!
+          Use this web app to create your to - do list!
         </p>
       </div>
       <div className="flex w-full flex-col items-center mt-6">
@@ -66,7 +80,7 @@ const Home = () => {
           </div>
         </div>
       </div>
-      <TodoList setTodos={setTodos} todos={todos} />
+      <TodoList userData={userData} setTodos={setTodos} todos={todos} />
     </div>
   );
 };

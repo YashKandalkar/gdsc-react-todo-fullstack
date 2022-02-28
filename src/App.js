@@ -1,15 +1,36 @@
-import { Routes, Route } from "react-router-dom";
-import { Home, Login, Signup } from "./pages";
+import { Home, Authenticate, Navbar } from "./components";
 import "./App.css";
+import { useEffect, useState } from "react";
 
 function App() {
+  const [userLoggedIn, setUserLoggedIn] = useState(false);
+  const [userData, setUserData] = useState(null);
+
+  useEffect(() => {
+    const sessionStorageUserData = sessionStorage.getItem("userData");
+    if (sessionStorageUserData) {
+      setUserData(JSON.parse(sessionStorageUserData));
+      setUserLoggedIn(true);
+    }
+  }, []);
+
   return (
     <div className="App">
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/signup" element={<Signup />} />
-      </Routes>
+      <>
+        <Navbar
+          userLoggedIn={userLoggedIn}
+          setUserLoggedIn={setUserLoggedIn}
+        />
+        {!userLoggedIn ? (
+          <Authenticate
+            userData={userData}
+            setUserData={setUserData}
+            setUserLoggedIn={setUserLoggedIn}
+          />
+        ) : (
+          <Home userData={userData} />
+        )}
+      </>
     </div>
   );
 }
